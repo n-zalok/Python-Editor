@@ -3,6 +3,10 @@ import subprocess
 import tempfile
 import json
 from sklearn.model_selection import GroupShuffleSplit
+from transformers import AutoTokenizer, AutoModel
+import torch
+import numpy as np
+from tqdm import tqdm
 
 
 def get_pylint_text(row: pd.Series) -> str:
@@ -42,3 +46,30 @@ def split_by_developer(df: pd.DataFrame, test_size: float, random_state: int) ->
     train_idx, test_idx = next(splits)
 
     return df.iloc[train_idx, :], df.iloc[test_idx, :]
+
+def vectorize_code(code_snippets: pd.Series) -> float:
+    tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
+    model = AutoModel.from_pretrained("microsoft/codebert-base")
+
+    embeddings = []
+    for snippet in tqdm(code_snippets):
+        tokens = tokenizer(
+                        snippet,
+                        max_length=512,
+                        truncation=True,
+                        padding=True,
+                        return_overflowing_tokens=True,
+                        stride=128,
+                        return_tensors="pt"
+                        )
+        
+        del tokens["overflow_to_sample_mapping"]
+        with torch.no_grad():
+            output = model(**tokens)
+        
+        chunck_emb = output.last_hidden_state.mean(dim=1)
+        file_emb = chunck_emb.mean(dim=0)
+
+        embeddings.append(file_emb)
+
+    return np.array(embeddings)
