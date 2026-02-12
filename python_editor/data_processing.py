@@ -9,6 +9,13 @@ import numpy as np
 from tqdm import tqdm
 
 
+def remove_skipped_files(df: pd.DataFrame, skip_strings: list) -> pd.DataFrame:
+    for skip_str in skip_strings:
+        df = df[~df["text"].str.contains(skip_str)]
+    
+    return df
+
+
 def get_pylint_text(row: pd.Series) -> str:
     with tempfile.NamedTemporaryFile(
         mode="w",
