@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import numpy as np
 from tqdm import tqdm
+import ast
 
 
 def remove_skipped_files(df: pd.DataFrame, skip_strings: list) -> pd.DataFrame:
@@ -17,6 +18,7 @@ def remove_skipped_files(df: pd.DataFrame, skip_strings: list) -> pd.DataFrame:
 
 
 def get_pylint_text(row: pd.Series) -> str:
+    
     with tempfile.NamedTemporaryFile(
         mode="w",
         suffix=".py",
@@ -54,6 +56,7 @@ def split_by_developer(df: pd.DataFrame, test_size: float, random_state: int) ->
 
     return df.iloc[train_idx, :], df.iloc[test_idx, :]
 
+
 def vectorize_code(code_snippets: pd.Series) -> float:
     tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
     model = AutoModel.from_pretrained("microsoft/codebert-base")
@@ -80,3 +83,39 @@ def vectorize_code(code_snippets: pd.Series) -> float:
         embeddings.append(file_emb)
 
     return np.array(embeddings)
+
+
+def has_executable_code(row: pd.Series) -> bool:
+    # BOM (Byte Order Mark) issue.
+    try:
+        text = row["text"].lstrip("\uefff")
+        text = text.lstrip("\uffef")
+        text = text.lstrip("\uefbb")
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    
+    # Recursively check for meaningful statements
+    for child in ast.walk(tree):
+        # Skip docstrings
+        if isinstance(child, ast.Expr) and isinstance(child.value, ast.Constant) and isinstance(child.value.value, str):
+            continue
+        
+        # Skip pass statements
+        if isinstance(child, ast.Pass):
+            continue
+        
+        # Skip type-only function/class definitions
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        
+        # If we find assignment, control flow, return, etc.
+        if isinstance(child, (
+            ast.Assign, ast.AugAssign, ast.AnnAssign,
+            ast.Return, ast.If, ast.For, ast.While,
+            ast.Try, ast.With, ast.Call, ast.Raise,
+            ast.Assert, ast.Yield
+        )):
+            return True
+
+    return False
