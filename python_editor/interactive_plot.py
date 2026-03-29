@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 import umap
 from bokeh.plotting import figure, curdoc
@@ -6,7 +7,8 @@ from bokeh.transform import linear_cmap
 from bokeh.palettes import RdBu11
 
 
-df = pd.read_pickle("../data/embeddings.pkl")
+emb_file = sys.argv[-1] 
+df = pd.read_pickle(f"../data/{emb_file}")
 
 embeddings = list(df["embedding"])
 umap_embedder = umap.UMAP()
