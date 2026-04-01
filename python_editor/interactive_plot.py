@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+from data_processing import split_by_developer
 import umap
 from bokeh.plotting import figure, curdoc
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, CustomJS
@@ -9,26 +10,27 @@ from bokeh.palettes import RdBu11
 
 emb_file = sys.argv[-1] 
 df = pd.read_pickle(f"../data/{emb_file}")
+train, test = split_by_developer(df, test_size=0.3, random_state=0)
 
-embeddings = list(df["embedding"])
+embeddings = list(train["embedding"])
 umap_embedder = umap.UMAP()
 umap_emb = umap_embedder.fit_transform(embeddings)
 
-df = pd.DataFrame({
+train = pd.DataFrame({
     "x": umap_emb[:, 0],
     "y": umap_emb[:, 1],
-    "NUM_CHARS": df["NUM_CHARS"],
-    "score": df["pylint_score"],
-    "text": df["text"]
+    "NUM_CHARS": train["NUM_CHARS"],
+    "score": train["pylint_score"],
+    "text": train["text"]
 })
 
-source = ColumnDataSource(df[["x", "y", "NUM_CHARS", "score", "text"]])
+source = ColumnDataSource(train[["x", "y", "NUM_CHARS", "score", "text"]])
 
 color_mapping = linear_cmap(
         field_name="score",
         palette=RdBu11,
-        low=df["score"].min(),
-        high=df["score"].max()
+        low=train["score"].min(),
+        high=train["score"].max()
 )
 
 hover = HoverTool(tooltips=[("NUM_CHARS", "@NUM_CHARS"), ("score", "@score")])
