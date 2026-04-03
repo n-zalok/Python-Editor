@@ -1,7 +1,10 @@
 import ast
 import tokenize
 from io import BytesIO
+import numpy as np
 import pandas as pd
+from python_editor.data_processing import split_by_developer
+from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 tqdm.pandas()
 
@@ -187,3 +190,32 @@ def generate_features(row: pd.Series) -> dict:
         "avg_func_class_args": avg_func_class_args,
         "func_class_docstring_ratio": func_class_docstring_ratio
     }
+
+
+def split_and_normalize_features(df: pd.DataFrame,
+                                 num_cols: list,
+                                 test_size: float,
+                                 random_state: int
+                                ):
+    
+    train, test = split_by_developer(df, test_size=test_size, random_state=random_state)
+    scaler = StandardScaler()
+
+    train.loc[:, num_cols] = scaler.fit_transform(train[num_cols])
+    test.loc[:, num_cols] = scaler.transform(test[num_cols])
+
+    return train, test
+
+
+def get_vectorized_features_and_label(df: pd.DataFrame, features: list):
+    vectorized_features = np.concatenate(
+        [
+            np.vstack(df["embedding"]),
+            df[features].values
+        ],
+        axis=1
+    )
+
+    label = df["pylint_score"].values
+    
+    return vectorized_features, label
