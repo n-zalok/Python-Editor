@@ -204,7 +204,7 @@ def split_and_normalize_features(df: pd.DataFrame,
     train.loc[:, num_cols] = scaler.fit_transform(train[num_cols])
     test.loc[:, num_cols] = scaler.transform(test[num_cols])
 
-    return train, test
+    return train, test, scaler
 
 
 def get_vectorized_features_and_label(df: pd.DataFrame, features: list):
