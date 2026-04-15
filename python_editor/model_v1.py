@@ -12,13 +12,15 @@ with open("../models/model_v1.pkl", "rb") as f:
 def get_model_prediction_from_text(row: pd.Series)-> float:
     if has_executable_code(row):
         embeddings = vectorize_code(row)
+        embeddings_array = embeddings.reshape(1, -1)
+
         features = generate_features(row)
-        df = pd.DataFrame([features]).astype(float)
+        features_array = np.array(list(features.values())).reshape(1, -1)
 
         vectorized_features = np.concatenate(
         [
-            embeddings,
-            df.values
+            embeddings_array,
+            features_array
         ],
         axis=1
     )
