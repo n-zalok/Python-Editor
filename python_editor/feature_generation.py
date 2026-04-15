@@ -8,6 +8,23 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 tqdm.pandas()
 
+
+FEATURES = [
+                "characters",
+                "code_compactness",
+                "chars_per_line",
+                "comment_ratio",
+                "has_docstring",
+                "variable_ratio",
+                "avg_var_name",
+                "num_funcs_and_classes",
+                "avg_func_class_name",
+                "avg_func_class_chars",
+                "avg_func_class_args",
+                "func_class_docstring_ratio"
+            ]
+
+
 class CodeAnalyzer(ast.NodeVisitor):
     def __init__(self, source: str):
         self.source = source
@@ -190,21 +207,6 @@ def generate_features(row: pd.Series) -> dict:
         "avg_func_class_args": avg_func_class_args,
         "func_class_docstring_ratio": func_class_docstring_ratio
     }
-
-
-def split_and_normalize_features(df: pd.DataFrame,
-                                 num_cols: list,
-                                 test_size: float,
-                                 random_state: int
-                                ):
-    
-    train, test = split_by_developer(df, test_size=test_size, random_state=random_state)
-    scaler = StandardScaler()
-
-    train.loc[:, num_cols] = scaler.fit_transform(train[num_cols])
-    test.loc[:, num_cols] = scaler.transform(test[num_cols])
-
-    return train, test, scaler
 
 
 def get_vectorized_features_and_label(df: pd.DataFrame, features: list):

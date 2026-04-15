@@ -8,7 +8,7 @@ def get_metrics(y_true, y_predicted):
     rmse = root_mean_squared_error(y_true, y_predicted)
     r_squared = r2_score(y_true, y_predicted)
 
-    return {"MAE": mae, "RMSE": rmse, "R2": r_squared}
+    return {"MAE": f"{mae:.3f}", "RMSE": f"{rmse:.3f}", "R2": f"{r_squared:.3f}"}
 
 
 def get_top_k(df: pd.DataFrame, metric_col: str, k: int) -> tuple:
