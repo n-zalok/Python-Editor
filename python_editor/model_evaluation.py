@@ -1,6 +1,8 @@
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 import shap
+import time
+from tqdm import tqdm
 
 
 def get_metrics(y_true, y_predicted):  
@@ -45,3 +47,26 @@ def get_shap_df(model, embed_dim, features, X_train, X_test):
 
     shap_values.feature_names = list(str(x) for x in range(embed_dim)) + features
     return shap_values
+
+
+def compare_time(model_func, pylint_func, test_texts: pd.Series) -> dict:
+    model_time = 0
+    pylint_time = 0
+
+    for text in tqdm(test_texts):
+        series = pd.Series({"text": text})
+
+        start_time = time.time()
+        _ = model_func(series)
+        end_time = time.time()
+        model_time += (end_time - start_time)
+
+        start_time = time.time()
+        _ = pylint_func(series)
+        end_time = time.time()
+        pylint_time += (end_time - start_time)
+
+    return {
+        "model_time": model_time / len(test_texts),
+        "pylint_time": pylint_time / len(test_texts)
+    }
