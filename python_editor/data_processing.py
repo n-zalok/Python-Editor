@@ -115,3 +115,20 @@ def has_executable_code(row: pd.Series) -> bool:
             return True
 
     return False
+
+
+def get_vectorized_features_and_label(df: pd.DataFrame, features: list):
+    if  "embedding" not in df.columns:
+        vectorized_features = df[features].values
+    else:
+        vectorized_features = np.concatenate(
+            [
+                np.vstack(df["embedding"]),
+                df[features].values
+            ],
+            axis=1
+        )
+
+    label = df["pylint_score"].values
+    
+    return vectorized_features, label

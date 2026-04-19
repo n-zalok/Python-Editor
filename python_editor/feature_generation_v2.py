@@ -362,17 +362,3 @@ def generate_features(row: pd.Series) -> dict:
         "func_class_docstring_ratio": func_class_docstring_ratio,
         "unused_imports_ratio": unused_imports_ratio
     }
-
-
-def get_vectorized_features_and_label(df: pd.DataFrame, features: list):
-    vectorized_features = np.concatenate(
-        [
-            np.vstack(df["embedding"]),
-            df[features].values
-        ],
-        axis=1
-    )
-
-    label = df["pylint_score"].values
-    
-    return vectorized_features, label

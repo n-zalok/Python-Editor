@@ -207,17 +207,3 @@ def generate_features(row: pd.Series) -> dict:
         "avg_func_class_args": avg_func_class_args,
         "func_class_docstring_ratio": func_class_docstring_ratio
     }
-
-
-def get_vectorized_features_and_label(df: pd.DataFrame, features: list):
-    vectorized_features = np.concatenate(
-        [
-            np.vstack(df["embedding"]),
-            df[features].values
-        ],
-        axis=1
-    )
-
-    label = df["pylint_score"].values
-    
-    return vectorized_features, label
