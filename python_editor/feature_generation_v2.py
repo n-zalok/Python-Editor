@@ -3,9 +3,8 @@ import re
 import tokenize
 from io import StringIO
 import numpy as np
+from radon.complexity import cc_visit
 import pandas as pd
-from python_editor.data_processing import split_by_developer
-from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 tqdm.pandas()
 
@@ -14,63 +13,53 @@ FEATURES = [
         "characters",
         "code_compactness",
         "line_length_std",
+        "cyclomatic_complexity",
         "long_line_ratio",
-        "trailing_ws_ratio",
         "bad_name_ratio",
-        "bare_except_ratio",
         "comment_ratio",
         "has_docstring",
         "variable_density",
         "func_density",
-        "avg_func_lines",
-        "avg_func_args",
         "too_many_args_ratio",
         "class_density",
-        "avg_class_lines",
         "avg_class_methods",
         "func_class_docstring_ratio",
         "unused_imports_ratio"
-    ]
+]
 
 LOG_FEATURES = [
-    "avg_func_lines",
+    "characters",
     "line_length_std",
-    "avg_class_lines",
-    "characters"
+    "cyclomatic_complexity"
 ]
 
 BINARY_FEATURES = [
-    "too_many_args",
-    "bare_except",
-    "trailing_ws",
-    "long_line",
-    "bad_name",
-    "unused_imports"
+    "long_line_ratio",
+    "bad_name_ratio",
+    "too_many_args_ratio",
+    "unused_imports_ratio"
 ]
 
 TRANSFORMED_FEATURES = [
         "characters",
         "code_compactness",
         "line_length_std",
+        "cyclomatic_complexity",
         "long_line",
-        "trailing_ws",
         "bad_name",
-        "bare_except",
         "comment_ratio",
         "has_docstring",
         "variable_density",
         "func_density",
-        "avg_func_lines",
-        "avg_func_args",
         "too_many_args",
         "class_density",
-        "avg_class_lines",
         "avg_class_methods",
         "func_class_docstring_ratio",
         "unused_imports"
-    ]
+]
 
 SNAKE_CASE = re.compile(r'^[a-z_][a-z0-9_]*$')
+PASCAL_CASE = re.compile(r'^[A-Z][a-zA-Z0-9]+$')
 
 class CodeAnalyzer(ast.NodeVisitor):
     def __init__(self, source):
@@ -83,7 +72,6 @@ class CodeAnalyzer(ast.NodeVisitor):
                 self.empty_lines += 1
 
         self.long_lines = sum(1 for l in self.lines if len(l) > 100)
-        self.trailing_ws = sum(1 for l in self.lines if l.rstrip() != l)
 
         # Import tracking
         self.imports = set()
@@ -97,12 +85,7 @@ class CodeAnalyzer(ast.NodeVisitor):
         self.functions = []
         self.classes = []
         self.too_many_args = 0
-        self.global_vars = set()
-
-        # Try-Except
-        self.total_try = 0
-        self.bare_except = 0
-
+        self.vars = set()
 
     # ---------- Helpers ----------
 
@@ -121,33 +104,37 @@ class CodeAnalyzer(ast.NodeVisitor):
     def _count_lines(self, node):
         return node.end_lineno - node.lineno + 1
     
-    def __check_name(self, name):
+    def __check_snake_case(self, name):
         self.total_names += 1
         if not SNAKE_CASE.match(name):
             self.bad_names += 1
-    
 
+    def __check_pascal_case(self, name):
+        self.total_names += 1
+        if not PASCAL_CASE.match(name):
+            self.bad_names += 1
+    
     # ---------- Variables ----------
 
     def visit_Assign(self, node):
         for t in node.targets:
             if isinstance(t, ast.Name):
-                self.global_vars.add(t.id)
-                self.__check_name(t.id)
+                self.vars.add(t.id)
+                self.__check_snake_case(t.id)
 
         self.generic_visit(node)
 
     # ---------- Functions ----------
 
     def visit_FunctionDef(self, node):
-        self.__check_name(node.name)
+        self.__check_snake_case(node.name)
 
         args = node.args
         arg_names = [a.arg for a in args.args]
 
         # args naming
         for arg in arg_names:
-            self.__check_name(arg)
+            self.__check_snake_case(arg)
 
         # too many args
         if len(arg_names) > 5:
@@ -171,11 +158,12 @@ class CodeAnalyzer(ast.NodeVisitor):
     # ---------- Classes ----------
 
     def visit_ClassDef(self, node):
-        methods = []
+        self.__check_pascal_case(node.name)
 
         doc = ast.get_docstring(node)
         has_docstring = 1 if doc else 0
 
+        methods = []
         for item in node.body:
             if isinstance(item, ast.FunctionDef):
                 methods.append(item.name)
@@ -191,7 +179,6 @@ class CodeAnalyzer(ast.NodeVisitor):
         self.classes.append(class_info)
 
         self.generic_visit(node)
-
     
     # ---------- IMPORTS ----------
 
@@ -218,20 +205,6 @@ class CodeAnalyzer(ast.NodeVisitor):
         if isinstance(node.value, ast.Name):
             self.used_names.add(node.value.id)
 
-        self.generic_visit(node)
-
-
-    # ---------- ERROR PATTERNS ----------
-
-    def visit_ExceptHandler(self, node):
-        if node.type is None:
-            self.bare_except += 1
-
-        self.generic_visit(node)
-
-    def visit_Try(self, node):
-        self.total_try += 1
-        
         self.generic_visit(node)
 
 
@@ -265,16 +238,13 @@ def analyze_code(code: str) -> dict:
         "has_docstring": has_docstring,
         "functions": stats.functions,
         "classes": stats.classes,
-        "variables": stats.global_vars,
+        "variables": stats.vars,
         "long_lines": stats.long_lines,
-        "trailing_ws": stats.trailing_ws,
         "imports": stats.imports,
         "used_names": stats.used_names,
         "total_names": stats.total_names,
         "bad_names": stats.bad_names,
         "too_many_args": stats.too_many_args,
-        "total_try": stats.total_try,
-        "bare_except": stats.bare_except
     }
 
 
@@ -289,6 +259,15 @@ def get_line_length_std(code: str):
     return np.std(lengths).item()
 
 
+def get_cyclomatic_complexity(code: str):
+    try:
+        blocks = cc_visit(code)
+        if not blocks:
+            return 0
+        return max(block.complexity for block in blocks)
+    except Exception:
+        return 0
+
 
 def generate_features(row: pd.Series) -> dict:
     stats = analyze_code(row["text"])
@@ -298,10 +277,9 @@ def generate_features(row: pd.Series) -> dict:
     characters = stats["characters"]
     code_compactness = effective_lines / stats["lines"]
     line_length_std = get_line_length_std(row["text"])
+    cyclomatic_complexity = get_cyclomatic_complexity(row["text"])
     long_line_ratio = stats["long_lines"] / effective_lines
-    trailing_ws_ratio = stats["trailing_ws"] / effective_lines
     bad_name_ratio = stats["bad_names"] / stats["total_names"] if stats["total_names"] else 0
-    bare_except_ratio = stats["bare_except"] / stats["total_try"] if stats["total_try"] else 0
 
     # Documentation features
     comment_ratio = stats["comment_lines"] / effective_lines
@@ -313,14 +291,11 @@ def generate_features(row: pd.Series) -> dict:
     # Functions features
     num_funcs = len(stats["functions"])
     func_density = num_funcs / effective_lines
-    avg_func_lines = sum(func["lines"] for func in stats["functions"]) / num_funcs if num_funcs else 0
-    avg_func_args = sum(len(func["arg_names"]) for func in stats["functions"]) / num_funcs if num_funcs else 0
     too_many_args_ratio = stats["too_many_args"] / num_funcs if num_funcs else 0
 
     # Classes features
     num_classes = len(stats["classes"])
     class_density = num_classes / effective_lines
-    avg_class_lines = sum(clss["lines"] for clss in stats["classes"]) / num_classes if num_classes else 0
     avg_class_methods = sum(len(clss["methods"]) for clss in stats["classes"]) / num_classes if num_classes else 0
     
     # Combined functions and classes features
@@ -345,20 +320,78 @@ def generate_features(row: pd.Series) -> dict:
         "characters": characters,
         "code_compactness": code_compactness,
         "line_length_std": line_length_std,
+        "cyclomatic_complexity": cyclomatic_complexity,
         "long_line_ratio": long_line_ratio,
-        "trailing_ws_ratio": trailing_ws_ratio,
         "bad_name_ratio": bad_name_ratio,
-        "bare_except_ratio": bare_except_ratio,
         "comment_ratio": comment_ratio,
         "has_docstring": has_docstring,
         "variable_density": variable_density,
         "func_density": func_density,
-        "avg_func_lines": avg_func_lines,
-        "avg_func_args": avg_func_args,
         "too_many_args_ratio": too_many_args_ratio,
         "class_density": class_density,
-        "avg_class_lines": avg_class_lines,
         "avg_class_methods": avg_class_methods,
         "func_class_docstring_ratio": func_class_docstring_ratio,
         "unused_imports_ratio": unused_imports_ratio
+    }
+
+
+def generate_transformed_features(row: pd.Series) -> dict:
+    stats = analyze_code(row["text"])
+    effective_lines = stats["lines"] - stats["empty_lines"]
+    
+    # Whole file features
+    characters = stats["characters"]
+    code_compactness = effective_lines / stats["lines"]
+    line_length_std = get_line_length_std(row["text"])
+    cyclomatic_complexity = get_cyclomatic_complexity(row["text"])
+    long_line = 1 if stats["long_lines"] else 0
+    bad_name = 1 if stats["bad_names"] else 0
+
+    # Documentation features
+    comment_ratio = stats["comment_lines"] / effective_lines
+    has_docstring = stats["has_docstring"]
+
+    # Variables features
+    variable_density = len(stats["variables"]) / effective_lines
+
+    # Functions features
+    num_funcs = len(stats["functions"])
+    func_density = num_funcs / effective_lines
+    too_many_args = 1 if stats["too_many_args"] else 0
+
+    # Classes features
+    num_classes = len(stats["classes"])
+    class_density = num_classes / effective_lines
+    avg_class_methods = sum(len(clss["methods"]) for clss in stats["classes"]) / num_classes if num_classes else 0
+    
+    # Combined functions and classes features
+    num_funcs_and_classes = num_funcs + num_classes
+
+    func_class_docstring_ratio = ( (sum(func["has_docstring"] for func in stats["functions"]) +
+                                    sum(clss["has_docstring"] for clss in stats["classes"])) /
+                                    num_funcs_and_classes ) if num_funcs_and_classes else 0
+        
+    # Imports features
+    unused_imports = 0
+    for name in stats["imports"]:
+        if name not in stats["used_names"]:
+            unused_imports = 1
+            break
+
+    return {
+        "characters": np.log1p(characters),
+        "code_compactness": code_compactness,
+        "line_length_std": np.log1p(line_length_std),
+        "cyclomatic_complexity": np.log1p(cyclomatic_complexity),
+        "long_line": long_line,
+        "bad_name": bad_name,
+        "comment_ratio": comment_ratio,
+        "has_docstring": has_docstring,
+        "variable_density": variable_density,
+        "func_density": func_density,
+        "too_many_args": too_many_args,
+        "class_density": class_density,
+        "avg_class_methods": avg_class_methods,
+        "func_class_docstring_ratio": func_class_docstring_ratio,
+        "unused_imports": unused_imports
     }
