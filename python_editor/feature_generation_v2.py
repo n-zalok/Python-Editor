@@ -34,10 +34,11 @@ LOG_FEATURES = [
 ]
 
 BINARY_FEATURES = [
-    "long_line_ratio",
-    "bad_name_ratio",
-    "too_many_args_ratio",
-    "unused_imports_ratio"
+    "long_line",
+    "bad_name",
+    "has_docstring",
+    "too_many_args",
+    "unused_imports"
 ]
 
 TRANSFORMED_FEATURES = [
