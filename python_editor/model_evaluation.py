@@ -28,7 +28,7 @@ def get_top_k(df: pd.DataFrame, metric_col: str, k: int) -> tuple:
     )
 
 
-def get_feature_importance(model, embedding_dim: int, features: list) -> pd.DataFrame:
+def get_feature_importance(model, features: list, embedding_dim: int = 0) -> pd.DataFrame:
     importances = model.feature_importances_
     feature_names = list(str(x) for x in range(embedding_dim)) + features
 
@@ -41,11 +41,11 @@ def get_feature_importance(model, embedding_dim: int, features: list) -> pd.Data
     return importance_df
 
 
-def get_shap_df(model, embed_dim, features, X_train, X_test):
+def get_shap_df(model, features, X_train, X_test, embedding_dim: int = 0):
     explainer = shap.TreeExplainer(model, X_train)
     shap_values = explainer(X_test)
 
-    shap_values.feature_names = list(str(x) for x in range(embed_dim)) + features
+    shap_values.feature_names = list(str(x) for x in range(embedding_dim)) + features
     return shap_values
 
 
