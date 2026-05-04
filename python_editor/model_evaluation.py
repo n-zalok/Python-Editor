@@ -3,6 +3,7 @@ from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_sco
 import shap
 import time
 from tqdm import tqdm
+from python_editor.model_prediction import get_model_prediction_from_text
 
 
 def get_metrics(y_true, y_predicted):  
@@ -49,20 +50,26 @@ def get_shap_df(model, features, X_train, X_test, embedding_dim: int = 0):
     return shap_values
 
 
-def compare_time(model_func, pylint_func, test_texts: pd.Series) -> dict:
+def compare_time(
+                    pylint_func,
+                    generate_features_func, 
+                    model, 
+                    test_texts: pd.Series, 
+                    embedding_dim: int = 0
+                ):
     model_time = 0
     pylint_time = 0
 
     for text in tqdm(test_texts):
-        series = pd.Series({"text": text})
+        row = pd.Series({"text": text})
 
         start_time = time.time()
-        _ = model_func(series)
+        _, _ = get_model_prediction_from_text(row, generate_features_func, model, embedding_dim)
         end_time = time.time()
         model_time += (end_time - start_time)
 
         start_time = time.time()
-        _ = pylint_func(series)
+        _, _ = pylint_func(row)
         end_time = time.time()
         pylint_time += (end_time - start_time)
 
