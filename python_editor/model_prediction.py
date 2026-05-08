@@ -28,6 +28,6 @@ def get_model_prediction_from_text(
         
         prediction = model.predict(vectorized_features)
 
-        return features,prediction[0].item()
+        return features, prediction[0].item()
     else:
         return {}, -1
