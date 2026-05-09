@@ -76,9 +76,16 @@ class CodeAnalyzer(ast.NodeVisitor):
 
         # Import tracking
         self.imports = set()
+
+        # counts imports, variables (self treated as one variable), classes
+        # and functions (even builtins but not methods)
         self.used_names = set()
 
         # Naming tracking
+
+        # counts variables (self treated as one variable),
+        # functions (even methods) and classes
+        # repeated names are counted repeatedly
         self.total_names = 0
         self.bad_names = 0
 
@@ -86,7 +93,10 @@ class CodeAnalyzer(ast.NodeVisitor):
         self.functions = []
         self.classes = []
         self.too_many_args = 0
-        self.vars = set()
+
+        # variables with identical names
+        # in different scopes are counted as one
+        self.vars = set() 
 
     # ---------- Helpers ----------
 
@@ -264,10 +274,10 @@ def get_cyclomatic_complexity(code: str):
     try:
         blocks = cc_visit(code)
         if not blocks:
-            return 0
+            return 1
         return max(block.complexity for block in blocks)
     except Exception:
-        return 0
+        return 1
 
 
 def generate_features(row: pd.Series) -> dict:
@@ -337,62 +347,22 @@ def generate_features(row: pd.Series) -> dict:
 
 
 def generate_transformed_features(row: pd.Series) -> dict:
-    stats = analyze_code(row["text"])
-    effective_lines = stats["lines"] - stats["empty_lines"]
-    
-    # Whole file features
-    characters = stats["characters"]
-    code_compactness = effective_lines / stats["lines"]
-    line_length_std = get_line_length_std(row["text"])
-    cyclomatic_complexity = get_cyclomatic_complexity(row["text"])
-    long_line = 1 if stats["long_lines"] else 0
-    bad_name = 1 if stats["bad_names"] else 0
-
-    # Documentation features
-    comment_ratio = stats["comment_lines"] / effective_lines
-    has_docstring = stats["has_docstring"]
-
-    # Variables features
-    variable_density = len(stats["variables"]) / effective_lines
-
-    # Functions features
-    num_funcs = len(stats["functions"])
-    func_density = num_funcs / effective_lines
-    too_many_args = 1 if stats["too_many_args"] else 0
-
-    # Classes features
-    num_classes = len(stats["classes"])
-    class_density = num_classes / effective_lines
-    avg_class_methods = sum(len(clss["methods"]) for clss in stats["classes"]) / num_classes if num_classes else 0
-    
-    # Combined functions and classes features
-    num_funcs_and_classes = num_funcs + num_classes
-
-    func_class_docstring_ratio = ( (sum(func["has_docstring"] for func in stats["functions"]) +
-                                    sum(clss["has_docstring"] for clss in stats["classes"])) /
-                                    num_funcs_and_classes ) if num_funcs_and_classes else 0
-        
-    # Imports features
-    unused_imports = 0
-    for name in stats["imports"]:
-        if name not in stats["used_names"]:
-            unused_imports = 1
-            break
+    features = generate_features(row)
 
     return {
-        "characters": np.log1p(characters),
-        "code_compactness": code_compactness,
-        "line_length_std": np.log1p(line_length_std),
-        "cyclomatic_complexity": np.log1p(cyclomatic_complexity),
-        "long_line": long_line,
-        "bad_name": bad_name,
-        "comment_ratio": comment_ratio,
-        "has_docstring": has_docstring,
-        "variable_density": variable_density,
-        "func_density": func_density,
-        "too_many_args": too_many_args,
-        "class_density": class_density,
-        "avg_class_methods": avg_class_methods,
-        "func_class_docstring_ratio": func_class_docstring_ratio,
-        "unused_imports": unused_imports
+        "characters": np.log1p(features["characters"]),
+        "code_compactness": features["code_compactness"],
+        "line_length_std": np.log1p(features["line_length_std"]),
+        "cyclomatic_complexity": np.log1p(features["cyclomatic_complexity"]),
+        "long_line": 1 if features["long_line_ratio"] else 0,
+        "bad_name": 1 if features["bad_name_ratio"] else 0,
+        "comment_ratio": features["comment_ratio"],
+        "has_docstring": features["has_docstring"],
+        "variable_density": features["variable_density"],
+        "func_density": features["func_density"],
+        "too_many_args": 1 if features["too_many_args_ratio"] else 0,
+        "class_density": features["class_density"],
+        "avg_class_methods": features["avg_class_methods"],
+        "func_class_docstring_ratio": features["func_class_docstring_ratio"],
+        "unused_imports": 1 if features["unused_imports_ratio"] else 0
     }

@@ -69,7 +69,7 @@ def compare_time(
         model_time += (end_time - start_time)
 
         start_time = time.time()
-        _, _ = pylint_func(row)
+        _ = pylint_func(row)
         end_time = time.time()
         pylint_time += (end_time - start_time)
 

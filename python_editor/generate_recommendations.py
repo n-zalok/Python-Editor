@@ -123,10 +123,17 @@ def get_recommendations(
 
 
 def construct_recommendations(score, recommendations, recommendation_msgs):
-    message = f"Estimated score: {score:.2f}\n\nSuggested improvements:\n\n"
+    message = f"Estimated score: {score:.2f}\n\n"
 
-    for feat, rec in recommendations.items():
-        message += recommendation_msgs[feat][f"{rec}_msg"]
-        message += "\n\n"
-    
-    return message
+    if score == -1:
+        return "Not a valid Python file or file contains no logic\n\n"
+    elif score == 10:
+        return message + "Code is perfect! No suggestions\n\n"
+    else:
+        message +="Suggested improvements:\n\n"
+
+        for feat, rec in recommendations.items():
+            message += recommendation_msgs[feat][f"{rec}_msg"]
+            message += "\n\n"
+            
+        return message
