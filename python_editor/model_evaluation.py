@@ -44,7 +44,7 @@ def get_feature_importance(model, features: list, embedding_dim: int = 0) -> pd.
 
 def get_shap_df(model, features, X_train, X_test, embedding_dim: int = 0):
     explainer = shap.TreeExplainer(model, X_train)
-    shap_values = explainer(X_test)
+    shap_values = explainer(X_test, check_additivity=False)
 
     shap_values.feature_names = list(str(x) for x in range(embedding_dim)) + features
     return shap_values
