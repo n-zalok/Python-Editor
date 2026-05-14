@@ -67,7 +67,7 @@ def get_recommendations(
                         model,
                         X_train: np.ndarray,
                         features_pos_effects: dict[str, str | tuple[float, float]],
-                        dependencies: dict[str, list[str]] | None = None,
+                        dependencies: dict[str, dict] | None = None,
                         log_features: list[str] | None = None,
                         embedding_dim: int = 0
                     ):
@@ -79,6 +79,14 @@ def get_recommendations(
     vectorized_features = np.array(list(features.values())).reshape(1, -1)
 
     shap_values = get_shap_df(model, list(features.keys()), X_train, vectorized_features, embedding_dim)
+
+    lines = row["text"].splitlines()
+    effective_lines = len([line for line in lines if line.strip()])
+    features["effective_lines"] = effective_lines
+
+
+    if dependencies is None:
+        dependencies = {}
 
     if log_features is None:
         log_features = []
@@ -106,15 +114,25 @@ def get_recommendations(
         else:
             if feat_value < pos_effect[0]:
                 if feat_name in dependencies.keys():
-                    for dependency in dependencies[feat_name]:
-                        if features[dependency] > 0:
+                    for dependency, value in dependencies[feat_name].items():
+                        if features[dependency] > value:
                             recommendations[feat_name] = "increase"
                         else:
                             recommendations[dependency] = "increase"
                 else:
                     recommendations[feat_name] = "increase"
             elif feat_value > pos_effect[1]:
-                recommendations[feat_name] = "decrease"
+                if feat_name in dependencies.keys():
+                    for dependency, value in dependencies[feat_name].items():
+                        if features[dependency] > value:
+                            recommendations[feat_name] = "decrease"
+                        else:
+                            recommendations[dependency] = "increase"
+                else:
+                    recommendations[feat_name] = "decrease"
+        
+        if "characters" in recommendations and "effective_lines" in recommendations:
+            recommendations.pop("characters")
         
         if len(recommendations) >= 3:
             break
@@ -126,7 +144,7 @@ def construct_recommendations(score, recommendations, recommendation_msgs):
     message = f"Estimated score: {score:.2f}\n\n"
 
     if score == -1:
-        return "Not a valid Python file or file contains no logic\n\n"
+        return "Not a valid python code or code contains no logic\n\n"
     elif score == 10:
         return message + "Code is perfect! No suggestions\n\n"
     else:
