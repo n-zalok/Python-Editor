@@ -12,7 +12,7 @@ configure_logging()
 
 app = FastAPI(
     title="Python Editor API",
-    description="API for AI-powered Python code review and recommendations",
+    description="API for ML-powered Python code review and recommendations",
     version="0.1.0",
 )
 

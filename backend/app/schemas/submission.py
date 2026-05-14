@@ -6,6 +6,17 @@ class SubmissionCreate(BaseModel):
     raw_code: str
 
 
+class SubmissionCreateResponse(BaseModel):
+    id: int
+    raw_code: str
+    recommendation_text: str
+
+
+class SubmissionResult(BaseModel):
+    raw_code: str
+    recommendation_text: str
+
+
 class SubmissionRead(BaseModel):
     id: int
     raw_code: str

@@ -1,4 +1,5 @@
 import mlflow
+import numpy as np
 import pandas as pd
 import pickle
 from python_editor.generate_recommendations import get_recommendations, construct_recommendations
@@ -16,9 +17,10 @@ run_id = model_info.run_id
 run = mlflow.get_run(run_id)
 
 df = pd.read_pickle(f"/app/app/ml/data/{run.data.tags['dataset']}")
-df = df.drop(columns=["embedding"])  ## extra
 train, _ = split_by_developer(df, test_size=float(run.data.tags["test_size"]), random_state=int(run.data.tags["random_state"]))
 X_train, _ = get_vectorized_features_and_label(train, TRANSFORMED_FEATURES)
+
+char_limit = np.expm1(df["characters"].max()) if "characters" in LOG_FEATURES else df["characters"].max()
 
 
 client = mlflow.MlflowClient()
