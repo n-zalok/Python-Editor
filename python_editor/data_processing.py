@@ -3,10 +3,7 @@ import subprocess
 import tempfile
 import json
 from sklearn.model_selection import GroupShuffleSplit
-from transformers import AutoTokenizer, AutoModel
-import torch
 import numpy as np
-from tqdm import tqdm
 import ast
 
 
@@ -57,6 +54,9 @@ def split_by_developer(df: pd.DataFrame, test_size: float, random_state: int = 0
 
 
 def vectorize_code(row: pd.Series) -> float:
+    from transformers import AutoTokenizer, AutoModel
+    import torch
+    
     tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
     model = AutoModel.from_pretrained("microsoft/codebert-base")
 
