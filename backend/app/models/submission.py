@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, JSON
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
 
 from app.database import Base
 
@@ -14,6 +14,6 @@ class CodeSubmission(Base):
     extracted_features = Column(JSON, nullable=False)
     prediction_output = Column(Float, nullable=False)
     model_version = Column(String(50), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     user = relationship("User", backref="submissions")
