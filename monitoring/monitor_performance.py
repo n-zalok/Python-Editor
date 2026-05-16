@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 from tqdm import tqdm
 tqdm.pandas()
-import datetime
+from datetime import datetime, timezone
 from python_editor.data_processing import split_by_developer, get_pylint_text, get_pylint_score
 from python_editor.feature_generation_v2 import TRANSFORMED_FEATURES
 from evidently import Report
@@ -47,26 +47,41 @@ def get_model_info(mlflow_uri, model_version):
     return rmse, train
 
 
-def get_df(model_version, db_uri):
+def get_df(model_version, db_uri, max_time=None, limit=None):
     print(f"Connecting to database at {db_uri}")
     engine = create_engine(db_uri)
+    
+    if max_time:
+        max_time_dt = datetime.strptime(max_time, "%Y-%m-%d_%H-%M-%S_UTC").replace(tzinfo=timezone.utc)
+        query = f"SELECT * FROM code_submissions WHERE model_version = '{model_version}' AND created_at <= '{max_time_dt}'"
+        df = pd.read_sql(query, engine)
 
-    df = pd.read_sql_table("code_submissions", engine)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    df = df[df["model_version"] == str(model_version)]
+        if limit:
+            df = df.head(limit)
 
-    return df, timestamp
+        return df, max_time
+    else:
+        query = f"SELECT * FROM code_submissions WHERE model_version = '{model_version}'"
+        df = pd.read_sql(query, engine)
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S_UTC")
+        print(f"Query timestamp: {timestamp}")
+
+        if limit:
+            df = df.head(limit)
+        
+        return df, timestamp
 
 
 def prepare_df(df):
-    df = df[["raw_code", "extracted_features", "prediction_output"]]
     df = df[df["prediction_output"] != -1]
 
     df_expanded = pd.json_normalize(df['extracted_features'])
     df = df.join(df_expanded).drop(columns=['extracted_features'])
 
+    df.rename(columns={'raw_code': 'text', 'user_id': 'repo_name'}, inplace=True)
+    df["repo_name"] = df["repo_name"].astype(str)
+
     print("Calculating pylint scores")
-    df.rename(columns={'raw_code': 'text'}, inplace=True)
     df["pylint_text"] = df.progress_apply(get_pylint_text, axis=1)
     df["pylint_score"] = df.progress_apply(get_pylint_score, axis=1)
 
@@ -148,7 +163,7 @@ def generate_report(mlflow_uri=None, db_uri=None, model_version=None):
     os.remove(f"temp_report_{timestamp}.html")
 
     os.makedirs("reports", exist_ok=True)
-    with open(f"reports/report{timestamp}.html", "w") as f:
+    with open(f"reports/report_{model_version}_{timestamp}.html", "w") as f:
         f.write(html)
     
     print("Saved report")
