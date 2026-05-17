@@ -1,6 +1,4 @@
 import pandas as pd
-import sys
-sys.path.append("..")
 from python_editor.feature_generation_v2 import analyze_code, get_cyclomatic_complexity, generate_features
 
 
@@ -42,7 +40,7 @@ days_left = user.days_till_birthday()
 print(f"Hello, {user.name}! You were born on {user.birthday}. You have {days_left} days left until your birthday.")
 """
 
-df = pd.read_csv("../data/test_sample.csv")
+df = pd.read_csv("data/test_sample.csv")
 
 def test_analyze_code():
     empty_features = analyze_code(empty_code)

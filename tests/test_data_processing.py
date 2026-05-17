@@ -1,11 +1,9 @@
 import pandas as pd
 import numpy as np
-import sys
-sys.path.append("..")
 from python_editor.data_processing import  split_by_developer, has_executable_code, vectorize_code
 
 
-df = pd.read_csv("../data/test_sample.csv")
+df = pd.read_csv("data/test_sample.csv")
 
 
 def test_split_by_developer():

@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 import mlflow
-import sys
-sys.path.append("..")
 from python_editor.data_processing import split_by_developer, get_vectorized_features_and_label
 from python_editor.model_prediction import get_model_prediction_from_text
 from python_editor.feature_generation_v2 import generate_transformed_features, TRANSFORMED_FEATURES, LOG_FEATURES
@@ -10,7 +8,7 @@ from python_editor.model_evaluation import get_shap_df
 from python_editor.generate_recommendations import get_widest_pos_range, get_recommendations
 
 
-df = pd.read_csv("../data/test_sample.csv")
+df = pd.read_csv("data/test_sample.csv")
 df["pylint_score"] = np.full(len(df), 0.0)
 
 features = df.progress_apply(generate_transformed_features, axis=1, result_type="expand")
@@ -20,7 +18,8 @@ train, test = split_by_developer(df_transformed_features, test_size=0.3, random_
 X_train, _ = get_vectorized_features_and_label(train, TRANSFORMED_FEATURES)
 X_test, _ = get_vectorized_features_and_label(test, TRANSFORMED_FEATURES)
 
-mlflow.set_tracking_uri("sqlite:///../models/mlflow/mlflow.db")
+MLFLOW_URI = "sqlite:////mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow/mlflow.db"
+mlflow.set_tracking_uri(MLFLOW_URI)
 model = mlflow.sklearn.load_model(
     "models:/recommendation_model@production"
 )
@@ -69,7 +68,7 @@ def test_get_recommendations():
                                             model,
                                             X_train,
                                             ranges,
-                                            LOG_FEATURES
+                                            log_features=LOG_FEATURES
                                         )
 
     assert isinstance(recommendations, dict)

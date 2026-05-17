@@ -1,14 +1,30 @@
-import sys
-sys.path.append("..")
 from monitoring.monitor_performance import get_production_model_version, get_model_info, get_df, prepare_df
 from monitoring.retrain_model import get_model_and_its_df, time_decay_weights
 from python_editor.feature_generation_v2 import TRANSFORMED_FEATURES
 import pandas as pd
 from datetime import datetime, timezone
+import pytest
+import subprocess
 
 
 MLFLOW_URI = "sqlite:////mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow/mlflow.db"
 DB_URI = "postgresql+psycopg2://postgres:postgres@localhost:5432/python_editor"
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_db():
+    subprocess.run(
+        ["docker", "compose", "-f", "docker-compose.yml", "up", "db", "-d"],
+        check=True
+    )
+
+    # wait until DB is ready here
+
+    yield
+
+    subprocess.run(
+        ["docker", "compose", "-f", "docker-compose.yml", "down"],
+        check=True
+    )
 
 def test_get_production_model_version():
     version = get_production_model_version(MLFLOW_URI)
