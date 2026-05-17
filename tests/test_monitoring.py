@@ -7,7 +7,7 @@ import pytest
 import subprocess
 
 
-MLFLOW_URI = "sqlite:////mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow/mlflow.db"
+MLFLOW_URI = "sqlite:///notebooks/models/mlflow/mlflow.db"
 DB_URI = "postgresql+psycopg2://postgres:postgres@localhost:5432/python_editor"
 
 @pytest.fixture(scope="module", autouse=True)
