@@ -1,7 +1,3 @@
-*.csv
-*.pkl
-notebooks/models/
-
 # Environment files
 .env
 backend/.env
