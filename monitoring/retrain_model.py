@@ -12,6 +12,9 @@ from python_editor.model_evaluation import get_metrics
 from monitoring.monitor_performance import get_df, prepare_df
 
 
+ROOT_DIR = "/mnt/ssd/ME/ML_files/python-editor/Python-Editor"
+
+
 def get_model_and_its_df(mlflow_uri, model_version):
     print(f"Connecting to MLflow at {mlflow_uri}")
     mlflow.set_tracking_uri(mlflow_uri)
@@ -22,7 +25,7 @@ def get_model_and_its_df(mlflow_uri, model_version):
     model_info = mlflow.models.get_model_info(model_uri)
     run_id = model_info.run_id
     run = mlflow.get_run(run_id)
-    df = pd.read_pickle(f"../data/{run.data.tags['dataset']}")
+    df = pd.read_pickle(f"{ROOT_DIR}/data/{run.data.tags['dataset']}")
 
     if "created_at" not in df.columns:
         end_time_ms = run.info.end_time
@@ -36,7 +39,7 @@ def create_and_save_training_df(old_df, new_df, model_version, timestamp):
     combined_df = pd.concat([old_df, new_df], join="inner", ignore_index=True)
     new_df_start_index = len(old_df)
 
-    df_path = f"../data/combined_features_{model_version}_{timestamp}.pkl"
+    df_path = f"{ROOT_DIR}/data/combined_features_{model_version}_{timestamp}.pkl"
     combined_df.to_pickle(df_path)
 
     return df_path, new_df_start_index

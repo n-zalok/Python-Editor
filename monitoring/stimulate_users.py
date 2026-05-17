@@ -4,10 +4,12 @@ import random
 import string
 from tqdm import tqdm
 
+
 def generate_random_password(length=8):
     """Generate a random password."""
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for i in range(length))
+
 
 def submit_code_as_user(user_name, code, credentials_df, api_base_url="http://localhost:8000"):
     """

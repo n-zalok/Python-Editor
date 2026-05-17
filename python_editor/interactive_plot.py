@@ -8,8 +8,10 @@ from bokeh.transform import linear_cmap
 from bokeh.palettes import RdBu11
 
 
+ROOT_DIR = "/mnt/ssd/ME/ML_files/python-editor/Python-Editor"
+
 emb_file = sys.argv[-1] 
-df = pd.read_pickle(f"../data/{emb_file}")
+df = pd.read_pickle(f"{ROOT_DIR}/data/{emb_file}")
 train, test = split_by_developer(df, test_size=0.3, random_state=0)
 
 embeddings = list(train["embedding"])

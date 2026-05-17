@@ -12,6 +12,8 @@ from evidently.presets import DataDriftPreset
 from jinja2 import Environment, FileSystemLoader
 import os
 
+
+ROOT_DIR = "/mnt/ssd/ME/ML_files/python-editor/Python-Editor"
 DECLINE_THRESHOLD = 0.25
 DRIFT_THRESHOLD = 0.2
 
@@ -41,7 +43,7 @@ def get_model_info(mlflow_uri, model_version):
     print("Getting model test performance and training data from MLflow")
     rmse = run.data.metrics["test_rmse"]
 
-    df = pd.read_pickle(f"../data/{run.data.tags['dataset']}")
+    df = pd.read_pickle(f"{ROOT_DIR}/data/{run.data.tags['dataset']}")
     train, _ = split_by_developer(df, test_size=float(run.data.tags["test_size"]), random_state=int(run.data.tags["random_state"]))
         
     return rmse, train
