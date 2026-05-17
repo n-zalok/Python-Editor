@@ -40,10 +40,11 @@ def create_and_save_training_df(old_df, new_df, model_version, timestamp):
     combined_df = pd.concat([old_df, new_df], join="inner", ignore_index=True)
     new_df_start_index = len(old_df)
 
-    df_path = f"{ROOT_DIR}/data/combined_features_{model_version}_{timestamp}.pkl"
+    df_name = f"combined_features_{model_version}_{timestamp}.pkl"
+    df_path = f"{ROOT_DIR}/data/{df_name}"
     combined_df.to_pickle(df_path)
 
-    return df_path, new_df_start_index
+    return df_name, new_df_start_index
 
 
 def time_decay_weights(df, timestamp, half_life_days=30):
@@ -193,11 +194,11 @@ def retrain_model(
     print(f"Prepared {len(new_df)} rows")
 
 
-    df_path, new_df_start_index = create_and_save_training_df(old_df, new_df, model_version, timestamp)
-    print(f"Created combined dataset at {df_path}")
+    df_name, new_df_start_index = create_and_save_training_df(old_df, new_df, model_version, timestamp)
+    print(f"Created combined dataset at {df_name}")
 
 
-    df = pd.read_pickle(df_path)
+    df = pd.read_pickle(f"{ROOT_DIR}/data/{df_name}")
     old_df = df.iloc[:new_df_start_index]
     new_df = df.iloc[new_df_start_index:]
     print(f"Split combined dataset into old ({len(old_df)}) and new ({len(new_df)})")
@@ -218,7 +219,7 @@ def retrain_model(
 
     run_name = f"retrain_{model_version}_{timestamp}"
     run_id, new_metrics = train_new_model(
-        mlflow_uri, run_name, df_path, X_train, y_train, X_test, y_test,
+        mlflow_uri, run_name, df_name, X_train, y_train, X_test, y_test,
         test_size=test_size,
         random_state=random_state,
         sample_weight=sample_weight,
