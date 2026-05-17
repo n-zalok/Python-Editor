@@ -8,7 +8,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 COMPOSE_FILE = "docker-compose-test.yml"
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 
 
 @pytest.fixture(scope="session")
