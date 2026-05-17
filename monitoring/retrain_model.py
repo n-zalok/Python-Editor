@@ -208,7 +208,7 @@ def retrain_model(
 
     half_life_days = 30
     sample_weight = time_decay_weights(train, timestamp, half_life_days=half_life_days)
-    print(f"Calculated time decay sample weights for training data")
+    print("Calculated time decay sample weights for training data")
     print(f"Sample weights summary: min={sample_weight.min()}, max={sample_weight.max()}, mean={sample_weight.mean()}")
 
 

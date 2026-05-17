@@ -46,7 +46,6 @@ def deploy_model(mlflow_uri=None, run_id=None, model_name=None):
 
     mlflow.set_tracking_uri(mlflow_uri)
     client = mlflow.MlflowClient()
-    run = mlflow.get_run(run_id)
 
     # Register model
     result = mlflow.register_model(

@@ -18,7 +18,7 @@ def get_config():
         from app.ml.pipeline import char_limit
 
         return {"char_limit": round(int(char_limit), -3)}
-    except Exception as e:
+    except Exception:
         # Return default if calculation fails
         return {"char_limit": 10000}
     

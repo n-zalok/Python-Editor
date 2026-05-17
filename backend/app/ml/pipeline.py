@@ -9,7 +9,7 @@ from python_editor.data_processing import split_by_developer, get_vectorized_fea
 
 
 mlflow.set_tracking_uri("sqlite:////mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow/mlflow.db")
-model_uri = f"models:/recommendation_model@production"
+model_uri = "models:/recommendation_model@production"
 
 
 model_info = mlflow.models.get_model_info(model_uri)

@@ -72,7 +72,7 @@ class CodeAnalyzer(ast.NodeVisitor):
             if not line.strip():
                 self.empty_lines += 1
 
-        self.long_lines = sum(1 for l in self.lines if len(l) > 100)
+        self.long_lines = sum(1 for line in self.lines if len(line) > 100)
 
         # Import tracking
         self.imports = set()

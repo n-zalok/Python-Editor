@@ -11,8 +11,7 @@ def plot_embeddings(embeddings, values, cmap="coolwarm"):
     :param embeddings: (n, 2) array of embeddings
     :param values: continuous values (n,)
     """
-    fig = plt.figure(figsize=(16, 9))
-
+    
     sc = plt.scatter(
         embeddings[:, 0],
         embeddings[:, 1],

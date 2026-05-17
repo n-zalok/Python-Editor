@@ -131,7 +131,7 @@ def generate_report(mlflow_uri=None, db_uri=None, model_version=None):
         rmse_msg = "exceeded"
     else:
         rmse_msg = "did not exceed"
-    print(f"Calculated new rmse")
+    print("Calculated new rmse")
 
 
     report, share_drifted_features, drifts = evaluate_distribution(df, train_df)

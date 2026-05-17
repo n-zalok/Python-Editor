@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import sys
 sys.path.append("..")
 from python_editor.feature_generation_v2 import analyze_code, get_cyclomatic_complexity, generate_features

@@ -1,10 +1,7 @@
 import ast
 import tokenize
 from io import BytesIO
-import numpy as np
 import pandas as pd
-from python_editor.data_processing import split_by_developer
-from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 tqdm.pandas()
 
