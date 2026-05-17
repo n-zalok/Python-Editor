@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import pandas as pd
 from data_processing import split_by_developer
@@ -8,7 +9,7 @@ from bokeh.transform import linear_cmap
 from bokeh.palettes import RdBu11
 
 
-ROOT_DIR = "/mnt/ssd/ME/ML_files/python-editor/Python-Editor"
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 emb_file = sys.argv[-1] 
 df = pd.read_pickle(f"{ROOT_DIR}/data/{emb_file}")

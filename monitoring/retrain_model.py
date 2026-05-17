@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import mlflow
 import pandas as pd
@@ -12,7 +13,7 @@ from python_editor.model_evaluation import get_metrics
 from monitoring.monitor_performance import get_df, prepare_df
 
 
-ROOT_DIR = "/mnt/ssd/ME/ML_files/python-editor/Python-Editor"
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 def get_model_and_its_df(mlflow_uri, model_version):

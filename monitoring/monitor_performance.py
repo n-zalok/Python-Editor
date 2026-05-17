@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import mlflow
 from sqlalchemy import create_engine
@@ -13,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 import os
 
 
-ROOT_DIR = "/mnt/ssd/ME/ML_files/python-editor/Python-Editor"
+ROOT_DIR = Path(__file__).resolve().parent.parent
 DECLINE_THRESHOLD = 0.25
 DRIFT_THRESHOLD = 0.2
 

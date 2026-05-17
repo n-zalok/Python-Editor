@@ -1,7 +1,11 @@
+from pathlib import Path
 import sys
 import os
 import mlflow
 import pickle
+
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 def save_model_recommendation_data(model_version=None, features_pos_effects=None, dependencies=None, recommendation_msgs=None):
@@ -10,25 +14,25 @@ def save_model_recommendation_data(model_version=None, features_pos_effects=None
 
     # Load dependencies and recommendation messages from previous version if not provided
     if dependencies is None:
-        with open(f"../recommendation_data/model_v{int(model_version) - 1}/dependencies.pkl", "rb") as f:
+        with open(f"{ROOT_DIR}/recommendation_data/model_v{int(model_version) - 1}/dependencies.pkl", "rb") as f:
             dependencies = pickle.load(f)
     if recommendation_msgs is None:
-        with open(f"../recommendation_data/model_v{int(model_version) - 1}/recommendation_msgs.pkl", "rb") as f:
+        with open(f"{ROOT_DIR}/recommendation_data/model_v{int(model_version) - 1}/recommendation_msgs.pkl", "rb") as f:
             recommendation_msgs = pickle.load(f)
     if features_pos_effects is None:
-        with open(f"../recommendation_data/model_v{int(model_version) - 1}/features_pos_effects.pkl", "rb") as f:
+        with open(f"{ROOT_DIR}/recommendation_data/model_v{int(model_version) - 1}/features_pos_effects.pkl", "rb") as f:
             features_pos_effects = pickle.load(f)
     
 
-    os.makedirs(f"../recommendation_data/model_v{model_version}", exist_ok=True)
+    os.makedirs(f"{ROOT_DIR}/recommendation_data/model_v{model_version}", exist_ok=True)
     
-    with open(f"../recommendation_data/model_v{model_version}/features_pos_effects.pkl", "wb") as f:
+    with open(f"{ROOT_DIR}/recommendation_data/model_v{model_version}/features_pos_effects.pkl", "wb") as f:
         pickle.dump(features_pos_effects, f)
 
-    with open(f"../recommendation_data/model_v{model_version}/dependencies.pkl", "wb") as f:
+    with open(f"{ROOT_DIR}/recommendation_data/model_v{model_version}/dependencies.pkl", "wb") as f:
         pickle.dump(dependencies, f)
 
-    with open(f"../recommendation_data/model_v{model_version}/recommendation_msgs.pkl", "wb") as f:
+    with open(f"{ROOT_DIR}/recommendation_data/model_v{model_version}/recommendation_msgs.pkl", "wb") as f:
         pickle.dump(recommendation_msgs, f)
 
  
