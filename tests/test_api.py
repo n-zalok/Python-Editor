@@ -11,12 +11,25 @@ COMPOSE_FILE = "docker-compose-test.yml"
 BASE_URL = "http://127.0.0.1:8001"
 
 
+def run_docker_compose(cmd):
+    try:
+        subprocess.run(cmd, cwd=str(ROOT), check=True)
+    except subprocess.CalledProcessError as exc:
+        subprocess.run(
+            ["docker", "compose", "-f", str(COMPOSE_FILE), "logs", "--no-color", "--tail", "200"],
+            cwd=str(ROOT),
+            check=False,
+        )
+        raise RuntimeError(
+            f"Docker Compose command failed: {' '.join(cmd)}\n"
+            f"Return code: {exc.returncode}"
+        ) from exc
+
+
 @pytest.fixture(scope="session")
 def base_url():
-    subprocess.run(
-        ["docker", "compose", "-f", str(COMPOSE_FILE), "up", "--build", "-d"],
-        cwd=str(ROOT),
-        check=True,
+    run_docker_compose(
+        ["docker", "compose", "-f", str(COMPOSE_FILE), "up", "--build", "-d"]
     )
 
     deadline = time.time() + 120

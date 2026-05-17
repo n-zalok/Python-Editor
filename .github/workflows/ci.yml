@@ -20,6 +20,15 @@ jobs:
           pip install -r requirements.txt
           pip install ruff pytest
 
+      - name: Verify Docker
+        run: |
+          docker --version
+          if ! docker compose version >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y docker-compose-plugin
+          fi
+          docker compose version
+
       - name: Lint
         run: ruff check .
 
