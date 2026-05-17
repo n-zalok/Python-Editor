@@ -18,7 +18,7 @@ train, test = split_by_developer(df_transformed_features, test_size=0.3, random_
 X_train, _ = get_vectorized_features_and_label(train, TRANSFORMED_FEATURES)
 X_test, _ = get_vectorized_features_and_label(test, TRANSFORMED_FEATURES)
 
-MLFLOW_URI = "sqlite:////mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow/mlflow.db"
+MLFLOW_URI = "sqlite:///notebooks/models/mlflow/mlflow.db"
 mlflow.set_tracking_uri(MLFLOW_URI)
 model = mlflow.sklearn.load_model(
     "models:/recommendation_model@production"
