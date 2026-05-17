@@ -24,7 +24,7 @@ services:
       - ./python_editor:/app/app/ml/python_editor
       - ./data:/app/app/ml/data
       - ./recommendation_data:/app/app/ml/recommendation_data
-      - /mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow:/mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow
+      - ./notebooks/models/mlflow:/mnt/ssd/ME/ML_files/python-editor/Python-Editor/notebooks/models/mlflow
 
 
   frontend:

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import mlflow
+import pickle
 from python_editor.data_processing import split_by_developer, get_vectorized_features_and_label
 from python_editor.model_prediction import get_model_prediction_from_text
 from python_editor.feature_generation_v2 import generate_transformed_features, TRANSFORMED_FEATURES, LOG_FEATURES
@@ -18,12 +18,8 @@ train, test = split_by_developer(df_transformed_features, test_size=0.3, random_
 X_train, _ = get_vectorized_features_and_label(train, TRANSFORMED_FEATURES)
 X_test, _ = get_vectorized_features_and_label(test, TRANSFORMED_FEATURES)
 
-MLFLOW_URI = "sqlite:///notebooks/models/mlflow/mlflow.db"
-mlflow.set_tracking_uri(MLFLOW_URI)
-model = mlflow.sklearn.load_model(
-    "models:/recommendation_model@production"
-)
 
+model = pickle.load(open("notebooks/models/model_v3.pkl", "rb"))
 shap_values = get_shap_df(model, TRANSFORMED_FEATURES, X_train, X_test)
 
 
