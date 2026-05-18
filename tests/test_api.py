@@ -11,26 +11,25 @@ COMPOSE_FILE = "docker-compose-test.yml"
 BASE_URL = "http://127.0.0.1:8001"
 
 
-def run_docker_compose(cmd):
+def run_docker_compose():
+    # Use -d for detached mode to let the containers run in the background
     try:
-        subprocess.run(cmd, cwd=str(ROOT), check=True)
-    except subprocess.CalledProcessError as exc:
-        subprocess.run(
-            ["docker", "compose", "-f", str(COMPOSE_FILE), "logs", "--no-color", "--tail", "200"],
-            cwd=str(ROOT),
-            check=False,
+        result = subprocess.run(
+            ["docker", "compose", "-f", str(COMPOSE_FILE), "up", "-d"], 
+            check=True, 
+            capture_output=True, 
+            text=True
         )
-        raise RuntimeError(
-            f"Docker Compose command failed: {' '.join(cmd)}\n"
-            f"Return code: {exc.returncode}"
-        ) from exc
+        print("Docker Compose started successfully.")
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error starting Docker Compose: {e.stderr}")
+        raise
 
 
 @pytest.fixture(scope="session")
 def base_url():
-    run_docker_compose(
-        ["docker", "compose", "-f", str(COMPOSE_FILE), "up", "--build", "-d"]
-    )
+    run_docker_compose()
 
     deadline = time.time() + 120
     while time.time() < deadline:

@@ -29,6 +29,9 @@ jobs:
           fi
           docker compose version
 
+      - name: Validate docker compose config
+        run: docker compose -f docker-compose-test.yml config
+
       - name: Lint
         run: ruff check .
 
