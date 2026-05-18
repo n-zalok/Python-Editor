@@ -262,6 +262,17 @@ tests/          Automated tests
 
 ## Running the Project
 
+### Setup
+
+```bash
+git clone https://github.com/n-zalok/Python-Editor.git
+cd Python-Editor
+
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+
 ### Run the app using Docker
 
 ```bash

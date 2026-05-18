@@ -28,7 +28,11 @@ jobs:
             sudo apt-get install -y docker-compose-plugin
           fi
           docker compose version
-
+      
+      - name: Copy .env file
+        run: |
+          cp backend/.env.example backend/.env
+        
       - name: Validate docker compose config
         run: docker compose -f docker-compose-test.yml config
 
